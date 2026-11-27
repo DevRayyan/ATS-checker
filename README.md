@@ -26,7 +26,6 @@ Most resumes are filtered by software before a person reads them. ATS Checker ta
 | **Fix list** | Four to six concrete edits, most valuable first, each with an example line |
 | **Bullet rewrite** | Streams five stronger versions of your weakest bullets. It never invents facts, it leaves `[X%]` placeholders |
 | **PDF upload** | Reads the text of a PDF in your browser |
-| **Dark mode** | Follows your system and can be switched by hand |
 
 ## How the score works
 
