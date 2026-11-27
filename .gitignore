@@ -1,0 +1,7 @@
+node_modules
+dist
+*.local
+scripts/*.woff
+.DS_Store
+.env
+.env.local
