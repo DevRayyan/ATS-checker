@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { extractPdfText } from '../lib/pdf'
+import { readResumeFile } from '../lib/resumeFile'
 
 interface Props {
   id: string
@@ -25,10 +25,7 @@ export default function InputCard({ id, title, hint, placeholder, value, onChang
     setFileError('')
     setReading(true)
     try {
-      const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
-      const text = isPdf ? await extractPdfText(file) : await file.text()
-      if (!text.trim()) throw new Error('No text found. A scanned PDF has no text layer, so paste the text instead.')
-      onChange(text)
+      onChange(await readResumeFile(file))
     } catch (err) {
       setFileError(err instanceof Error ? err.message : 'Could not read that file.')
     } finally {
@@ -50,9 +47,9 @@ export default function InputCard({ id, title, hint, placeholder, value, onChang
         <div className="flex shrink-0 items-center gap-1">
           {allowUpload && (
             <>
-              <input ref={fileRef} type="file" accept=".pdf,.txt,.md,application/pdf,text/plain" onChange={onFile} className="sr-only" tabIndex={-1} />
+              <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/plain" onChange={onFile} className="sr-only" tabIndex={-1} />
               <button type="button" className="btn-quiet" onClick={() => fileRef.current?.click()} disabled={reading}>
-                {reading ? 'Reading…' : 'Upload PDF'}
+                {reading ? 'Reading…' : 'Upload PDF / Word'}
               </button>
             </>
           )}

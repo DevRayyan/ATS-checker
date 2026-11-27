@@ -67,7 +67,7 @@ export default function App() {
           <InputCard
             id="resume"
             title="Your resume"
-            hint="Paste the text or upload a PDF."
+            hint="Paste the text or upload a PDF or Word file."
             placeholder="Paste your resume here…"
             value={resume}
             onChange={setResume}

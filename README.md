@@ -26,7 +26,7 @@ Most resumes are filtered by software before a person reads them. ATS Checker ta
 | **Section check** | Contact details, summary, experience, education and skills |
 | **Fix list** | Four to six concrete edits, most valuable first, each with an example line |
 | **Bullet rewrite** | Streams five stronger versions of your weakest bullets. It never invents facts, it leaves `[X%]` placeholders |
-| **PDF upload** | Reads the text of a PDF in your browser |
+| **PDF and Word upload** | Reads a PDF or a `.docx` file in your browser. Your file is never uploaded anywhere |
 
 ## How the score works
 
@@ -44,7 +44,7 @@ Matching handles whole words only (`Java` does not match `JavaScript`), symbols 
 - React 18, TypeScript and Vite 5
 - Tailwind CSS 3 with Google Sans
 - [Groq](https://groq.com) chat completions with `openai/gpt-oss-120b`, JSON mode for the analysis and streaming for the rewrite
-- pdf.js, loaded only when you upload a PDF
+- pdf.js for PDFs and mammoth for Word files, each loaded only when you upload that type
 - Vitest
 
 ## Run it locally
