@@ -89,17 +89,21 @@ export default function Results({ a }: { a: Analysis }) {
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
           <ScoreRing score={a.score} />
           <div className="min-w-0 flex-1 text-center sm:text-left">
-            <span className={`chip ${TONE[tone].pill}`}>{label}</span>
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              <span className={`chip ${TONE[tone].pill}`}>{label}</span>
+              {!a.hasJd && <span className="chip bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">General check · no job description</span>}
+            </div>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">{a.jobTitle}</h2>
             {a.summary && <p className="mt-1.5 text-[15px] leading-relaxed text-gray-600 dark:text-gray-300">{a.summary}</p>}
           </div>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <Meter label="Keyword match" value={a.keywordCoverage} />
+          <Meter label={a.hasJd ? 'Keyword match' : 'Role keyword coverage'} value={a.keywordCoverage} />
           <Meter label="Fit and clarity (AI review)" value={a.aiScore} />
         </div>
         <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
           Overall = 60% keyword match + 40% AI review. Keywords are checked against your text in the browser, not by the AI.
+          {!a.hasJd && ' Without a job description, the keywords are the ones usually expected for the role read from your resume. Add a job description for a sharper result.'}
         </p>
       </section>
 
@@ -114,7 +118,7 @@ export default function Results({ a }: { a: Analysis }) {
 
         {missing.length > 0 && (
           <>
-            <p className="label mt-4">Missing</p>
+            <p className="label mt-4">{a.hasJd ? 'Missing' : 'Suggested to add'}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {missing.map((k) => (
                 <span

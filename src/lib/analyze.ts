@@ -14,6 +14,8 @@ export interface SectionCheck {
 }
 
 export interface Analysis {
+  /** False when no job description was given and the role was inferred from the resume. */
+  hasJd: boolean
   jobTitle: string
   summary: string
   aiScore: number
@@ -29,9 +31,7 @@ export interface Analysis {
 // Keeps a request well inside the model's context window.
 const MAX_CHARS = 14000
 
-const ANALYSIS_SYSTEM = `You are an expert technical recruiter and ATS (applicant tracking system) specialist.
-Compare a resume with a job description and answer with ONE JSON object, no prose, in exactly this shape:
-{
+const SHAPE = `{
   "job_title": string,
   "summary": string,                       // 2 sentences, plain language, addressed to the candidate
   "quality_score": number,                 // 0-100, how well the resume fits THIS job (experience, level, relevance, clarity)
@@ -40,12 +40,28 @@ Compare a resume with a job description and answer with ONE JSON object, no pros
   "strengths": [string],                   // 3-5 items
   "gaps": [string],                        // 3-5 items
   "fixes": [ { "title": string, "why": string, "example": string } ]  // 4-6 concrete edits, most valuable first
-}
+}`
+
+const COMMON_RULES = `- "sections" must check these in order: Contact details, Summary, Experience, Education, Skills. Add Projects or Certifications only if the job needs them.
+- Never invent experience the resume does not show. In "example", rewrite a real line from the resume or show a pattern the candidate can fill in with their own facts.
+- Be specific and honest. Do not flatter.
+- Also judge ATS readability: flag layouts that parsers struggle with (tables, columns, text in images, icons instead of words, missing dates, unusual headings) in "gaps" or "fixes", but only when the text suggests them.`
+
+const ANALYSIS_SYSTEM = `You are an expert technical recruiter and ATS (applicant tracking system) specialist.
+Compare a resume with a job description and answer with ONE JSON object, no prose, in exactly this shape:
+${SHAPE}
 Rules:
 - "keywords" are the skills, tools, technologies, certifications and role terms the job description asks for. Use 12-25 terms, the exact wording from the job description, short (1-3 words). "must" = required, "nice" = preferred or optional.
-- "sections" must check these in order: Contact details, Summary, Experience, Education, Skills. Add Projects or Certifications only if the job needs them.
-- Never invent experience the resume does not show. In "example", rewrite a real line from the resume or show a pattern the candidate can fill in with their own facts.
-- Be specific and honest. Do not flatter.`
+${COMMON_RULES}`
+
+const GENERAL_SYSTEM = `You are an expert technical recruiter and ATS (applicant tracking system) specialist.
+No job description was given. Work out the most likely target role from the resume, review the resume for that role, and answer with ONE JSON object, no prose, in exactly this shape:
+${SHAPE}
+Rules:
+- "job_title" is the target role you inferred, for example "Frontend Developer".
+- "quality_score" is the general ATS-readiness and strength of the resume for that role: structure, clarity, quantified results and relevant skills.
+- "keywords" are the skills, tools and terms that recruiters and ATS filters usually look for in that role. Use 12-25 short terms (1-3 words), mixing ones the resume already has with important ones it lacks. "must" = core to the role, "nice" = a plus.
+${COMMON_RULES}`
 
 function clip(text: string): string {
   const t = text.trim()
@@ -53,7 +69,9 @@ function clip(text: string): string {
 }
 
 function userPrompt(resume: string, jd: string): string {
-  return `JOB DESCRIPTION:\n"""\n${clip(jd)}\n"""\n\nRESUME:\n"""\n${clip(resume)}\n"""`
+  const resumeBlock = `RESUME:\n"""\n${clip(resume)}\n"""`
+  if (!jd.trim()) return resumeBlock
+  return `JOB DESCRIPTION:\n"""\n${clip(jd)}\n"""\n\n${resumeBlock}`
 }
 
 const str = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v.trim() : fallback)
@@ -73,7 +91,7 @@ export function extractJson(raw: string): unknown {
   }
 }
 
-export function parseAnalysis(raw: string, resume: string): Analysis {
+export function parseAnalysis(raw: string, resume: string, hasJd = true): Analysis {
   const data = extractJson(raw) as Record<string, unknown>
 
   const keywords: JdKeyword[] = (Array.isArray(data.keywords) ? data.keywords : [])
@@ -84,13 +102,20 @@ export function parseAnalysis(raw: string, resume: string): Analysis {
     }))
     .filter((k) => k.term)
 
-  if (keywords.length === 0) throw new Error('No keywords were found in the job description. Paste the full text and try again.')
+  if (keywords.length === 0) {
+    throw new Error(
+      hasJd
+        ? 'No keywords were found in the job description. Paste the full text and try again.'
+        : 'Could not work out the role from this resume. Add more detail, or paste a job description.',
+    )
+  }
 
   // The model only proposes keywords. Whether each one is in the resume is checked here.
   const match = matchKeywords(resume, keywords)
   const aiScore = Math.max(0, Math.min(100, Math.round(Number(data.quality_score) || 0)))
 
   return {
+    hasJd,
     jobTitle: str(data.job_title, 'This role'),
     summary: str(data.summary),
     aiScore,
@@ -116,14 +141,14 @@ export async function analyzeResume(
   signal?: AbortSignal,
 ): Promise<Analysis> {
   const messages: ChatMessage[] = [
-    { role: 'system', content: ANALYSIS_SYSTEM },
+    { role: 'system', content: jd.trim() ? ANALYSIS_SYSTEM : GENERAL_SYSTEM },
     { role: 'user', content: userPrompt(resume, jd) },
   ]
   const raw = await chat(key, { model, messages, json: true, temperature: 0.1, signal })
-  return parseAnalysis(raw, resume)
+  return parseAnalysis(raw, resume, Boolean(jd.trim()))
 }
 
-const REWRITE_SYSTEM = `You are a resume editor. Rewrite the weakest experience bullets of the resume so they fit the job description.
+const REWRITE_SYSTEM = `You are a resume editor. Rewrite the weakest experience bullets of the resume so they fit the job description. If no job description is given, make them stronger for the role the resume is aiming at.
 Rules:
 - Pick the 5 weakest or least relevant bullets from the resume.
 - For each, output the original line, then the improved line. Use this format exactly:

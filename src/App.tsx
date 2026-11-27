@@ -24,7 +24,7 @@ export default function App() {
 
   useEffect(() => () => abort.current?.abort(), [])
 
-  const tooShort = resume.trim().length < MIN_CHARS || jd.trim().length < MIN_CHARS
+  const tooShort = resume.trim().length < MIN_CHARS
 
   async function run() {
     abort.current?.abort()
@@ -52,7 +52,7 @@ export default function App() {
         <div className="max-w-2xl">
           <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">Will your resume get past the ATS?</h1>
           <p className="mt-3 text-base text-gray-600 dark:text-gray-400 sm:text-lg">
-            Paste your resume and a job description. Get a match score, the keywords you are missing, and concrete fixes. Nothing is stored on a server.
+            Paste or upload your resume to get an ATS score, the keywords you are missing and concrete fixes. Add a job description to check against a specific role. Nothing is stored on a server.
           </p>
         </div>
 
@@ -76,8 +76,8 @@ export default function App() {
           />
           <InputCard
             id="jd"
-            title="Job description"
-            hint="Paste the full posting, with requirements."
+            title="Job description (optional)"
+            hint="Paste a posting for a sharper match. Leave empty for a general ATS check."
             placeholder="Paste the job description here…"
             value={jd}
             onChange={setJd}
@@ -89,7 +89,7 @@ export default function App() {
           <button type="button" className="btn-primary !px-6 !py-3 !text-base" onClick={run} disabled={busy || tooShort || !API_KEY}>
             {busy ? 'Analyzing…' : 'Check my resume'}
           </button>
-          {tooShort && !busy && <span className="text-sm text-gray-500 dark:text-gray-400">Add a bit more text to both boxes first.</span>}
+          {tooShort && !busy && <span className="text-sm text-gray-500 dark:text-gray-400">Add your resume text first.</span>}
         </div>
 
         {error && (

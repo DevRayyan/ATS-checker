@@ -47,6 +47,11 @@ describe('parseAnalysis', () => {
     expect(a.fixes).toEqual([])
   })
 
+  it('marks a general check when no job description was given', () => {
+    expect(parseAnalysis(JSON.stringify(reply), 'React dev', false).hasJd).toBe(false)
+    expect(parseAnalysis(JSON.stringify(reply), 'React dev').hasJd).toBe(true)
+  })
+
   it('rejects a reply with no keywords', () => {
     expect(() => parseAnalysis(JSON.stringify({ keywords: [] }), 'x')).toThrow(/keywords/i)
   })

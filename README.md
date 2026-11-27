@@ -12,7 +12,7 @@
   <a href="https://github.com/DevRayyan/ATS-checker/issues">Report an issue</a>
 </p>
 
-Most resumes are filtered by software before a person reads them. ATS Checker takes your resume and a job posting, tells you how close they are, and shows exactly what to change. It runs entirely in the browser: there is no backend and no database.
+Most resumes are filtered by software before a person reads them. ATS Checker takes your resume, with or without a job posting, tells you how ready it is, and shows exactly what to change. Add a job description to check against a specific role, or leave it empty for a general ATS check. It runs entirely in the browser: there is no backend and no database.
 
 **Try it:** [devrayyan.github.io/ATS-checker](https://devrayyan.github.io/ATS-checker/). Press **Sample** in both boxes to see a result in a few seconds.
 
@@ -20,7 +20,8 @@ Most resumes are filtered by software before a person reads them. ATS Checker ta
 
 | Area | What it does |
 |---|---|
-| **Match score** | One 0 to 100 score, split into keyword match and an AI review of fit and clarity |
+| **ATS score** | One 0 to 100 score, split into keyword match and an AI review of fit and clarity |
+| **Job description is optional** | Without one, the role is read from your resume and checked against the keywords that role usually needs |
 | **Keywords** | The skills and tools the job asks for, marked found or missing, with required ones called out |
 | **Section check** | Contact details, summary, experience, education and skills |
 | **Fix list** | Four to six concrete edits, most valuable first, each with an example line |
